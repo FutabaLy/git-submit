@@ -71,7 +71,7 @@ export function createDispatcher({ dataDir = DATA_HOME, service = null, monitor 
         ]);
         const value = balance.status === 'fulfilled' ? balance.value : { ok: false };
         return jsonResult(200, { ok: true,
-          deepseek: { ok: value.ok === true, totalBalance: value.totalBalance ?? null, currency: value.currency || 'CNY', stale: !!value.stale, code: value.code || null },
+          deepseek: { ok: value.ok === true, totalBalance: value.totalBalance ?? null, currency: value.currency || 'CNY', stale: !!value.stale, code: value.code || null, updatedAt: value.updatedAt || null },
           subscription: quota.status === 'fulfilled' ? quota.value.subscription : { available: false, windows: [], reason: '暂时无法读取额度快照' },
         });
       }

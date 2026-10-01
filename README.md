@@ -2,7 +2,7 @@
 
 点击桌面小鲸鱼，同时查看 **DeepSeek 账户余额**、**Codex 5 小时剩余百分比**和 **Codex 7 天剩余百分比**。
 
-基于 [上游 For-Codex 分支](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget/tree/For-Codex) 的独立修改版，不是上游官方发行。版本：`0.3.0+codex.dual.20261001`。来源见 [FORK-NOTES](docs/FORK-NOTES.md)。
+基于 [上游 For-Codex 分支](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget/tree/For-Codex) 的独立修改版，不是上游官方发行。版本：`0.3.0+codex.dual.20261002`。来源见 [FORK-NOTES](docs/FORK-NOTES.md)。
 
 ## 功能
 

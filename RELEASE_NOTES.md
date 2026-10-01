@@ -1,4 +1,4 @@
-# v0.3.0-dual.1
+# v0.3.0-dual.2
 
 基于 For-Codex 的独立修改版。
 
@@ -10,3 +10,5 @@
 需要 Node.js 24+ 与支持插件功能的 Codex。首次安装联网下载 Electron；不是离线 EXE。macOS 本次未实机验收。
 
 沿用 api-balance-whale 插件 ID，会替换同 ID 上游版本。感谢 MeteorNOX、Yang-huai406、1llysviel 及上游贡献者。
+
+2026-10-02 修复：余额卡片打开时每 30 秒自动刷新，显示余额更新时间，并增加 20 秒请求超时及重复请求保护。

@@ -1,6 +1,6 @@
 {
   "name": "api-balance-whale",
-  "version": "0.3.0+codex.dual.20261001",
+  "version": "0.3.0+codex.dual.20261002",
   "description": "独立修改版：同时查看 DeepSeek 余额和 Codex 5h / 7 day 剩余额度",
   "author": {
     "name": "Yang-huai406 (upstream Codex adaptation)",

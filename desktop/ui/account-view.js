@@ -17,11 +17,11 @@
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const key = 'dshw-account-view';
   let mode = 'api', card = null, content = null, root = null, generation = 0, switching = false, latestNotice = null;
-  let modeButtons = [], status = null, modeRevision = 0;
+  let modeButtons = [], status = null, modeRevision = 0, refreshTimer = null, pendingCard = null;
   try { const saved = localStorage.getItem(key); if (validMode(saved)) mode = saved; } catch {}
   function text(parent, tag, value) { const el = document.createElement(tag); el.textContent = value; parent.append(el); return el; }
   function date(value) { if (!value) return '未知'; const d = new Date(typeof value === 'number' && value < 1e12 ? value * 1000 : value); return Number.isFinite(d.getTime()) ? d.toLocaleString() : '未知'; }
-  function close() { generation++; card?.remove(); card = content = null; }
+  function close() { generation++; clearInterval(refreshTimer); refreshTimer=null; card?.remove(); card = content = null; }
   function position() {
     if (!card) return;
     const anchor = (root || document).querySelector('.dshwv-img') || document.querySelector('.dshwv-img');
@@ -59,15 +59,17 @@
     finally { switching = false; updateButtons(); }
   }
   async function refresh() {
-    if (!card) return;
+    if (!card || pendingCard===card) return;
+    const ownCard=card;pendingCard=ownCard;
     const revision=++generation;
     content.replaceChildren();text(content,'p','正在读取余额与额度…');position();
     try {
-      const response=await fetch('/api/combined-summary?refresh=1',{cache:'no-store'});
+      const response=await fetch('/api/combined-summary?refresh=1',{cache:'no-store',signal:AbortSignal.timeout(20000)});
       if(!response.ok)throw Error('读取失败');
       const data=await response.json();if(revision!==generation||!card)return;
       renderCombined(content,data);position();
     } catch {if(revision===generation&&content){content.replaceChildren();text(content,'p','暂时无法读取，请刷新重试');position();}}
+    finally {if(pendingCard===ownCard)pendingCard=null;}
   }
   function renderCombined(parent,data) {
     parent.replaceChildren();
@@ -75,6 +77,7 @@
     text(parent,'strong','DeepSeek 余额');
     text(parent,'p',ds.ok&&typeof ds.totalBalance==='number'?new Intl.NumberFormat('zh-CN',{style:'currency',currency:ds.currency||'CNY',minimumFractionDigits:2,maximumFractionDigits:4}).format(ds.totalBalance):ds.code==='NO_KEY'?'请先配置 DeepSeek 密钥':'暂时无法查询');
     if(ds.stale)text(parent,'small','上次成功余额，等待更新');
+    if(ds.updatedAt)text(parent,'small','余额更新：'+date(ds.updatedAt));
     const sub=data?.subscription||{};
     for(const [minutes,label] of [[300,'Codex · 5h'],[10080,'Codex · 7 day']]){
       const item=(sub.available?sub.windows:[])?.find(w=>w.windowDurationMins===minutes);
@@ -94,7 +97,9 @@
     const header = text(card, 'div', ''); header.className = 'whale-account-header'; text(header, 'strong', '余额与额度');
     const closeButton = text(header, 'button', '关闭'); closeButton.onclick = close;
     content = text(card, 'div', ''); const refreshButton = text(card, 'button', '刷新'); refreshButton.onclick = refresh;
-    document.body.append(card); followCard(card); refresh(); return true;
+    document.body.append(card); followCard(card); refresh();
+    refreshTimer=setInterval(()=>{if(card)refresh();},30000);
+    return true;
   }
   function notice(value) {
     if (mode !== 'subscription') return;

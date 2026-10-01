@@ -16,7 +16,7 @@ git push -u origin main
 
 使用自己的 Git 提交信息。确保 `.codex-plugin`、`.mcp.json`、`.github` 等隐藏文件一起提交。仅上传本目录，不上传整个聊天工作目录或本机插件数据。
 
-发布下载包时，在 Releases 新建 `v0.3.0-dual.1`，参考 `RELEASE_NOTES.md` 填说明，再附上源码 ZIP。此包不含 Electron 离线运行时。
+发布下载包时，在 Releases 新建 `v0.3.0-dual.2`，参考 `RELEASE_NOTES.md` 填说明，再附上源码 ZIP。此包不含 Electron 离线运行时。
 
 发布前运行 `npm test` 和 `node scripts/check-package.mjs`。保留上游链接、来源记录、LICENSE 和 THIRD_PARTY_NOTICES。不要提交 `.env`、`auth.json`、`credential.json`、账本或运行日志。
 

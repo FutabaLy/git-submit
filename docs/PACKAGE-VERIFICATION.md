@@ -1,8 +1,8 @@
 # 打包验证记录
 
-日期：2026-10-01，Windows，Node.js 24.21.0。
+日期：2026-10-02，Windows，Node.js 24.21.0。
 
-- npm test：240 项通过，0 失败，0 跳过。
+- npm test：241 项通过，0 失败，0 跳过。
 - node scripts/check-package.mjs：依赖图完整。
 - PowerShell 安装与回滚脚本：全部语法解析通过。
 - 来源检查：打包源为下载的 For-Codex 源码与本次修改，不从个人运行数据目录复制。

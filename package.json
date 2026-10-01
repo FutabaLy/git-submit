@@ -1,6 +1,6 @@
 {
   "name": "api-balance-whale",
-  "version": "0.3.0+codex.dual.20261001",
+  "version": "0.3.0+codex.dual.20261002",
   "description": "Codex API balance and subscription usage companion for Windows and macOS",
   "type": "module",
   "private": true,
