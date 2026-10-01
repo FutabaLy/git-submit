@@ -179,10 +179,13 @@ function Register-ScheduledTask { [CmdletBinding()]param($TaskName,$InputObject,
 });
 
 test('task identity accepts a verified old cache but rejects outside installations and different data directories', { skip: process.platform !== 'win32' }, async t => {
-  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'whale-desktop-audit-identity-'));
+  // 8.3 短路径名（如 ADMINI~1）会让 Node 拼出的路径与 PowerShell 生成的长路径
+  // 字符串不相等，必须先用 realpath 归一化到长名。
+  const temporary = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'whale-desktop-audit-identity-')));
+  const tempRoot = await fs.realpath(os.tmpdir());
   t.after(async () => {
     const resolved = path.resolve(temporary);
-    assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep) && path.basename(resolved).startsWith('whale-desktop-audit-identity-'));
+    assert.ok(resolved.startsWith(tempRoot + path.sep) && path.basename(resolved).startsWith('whale-desktop-audit-identity-'));
     await fs.rm(resolved, { recursive: true, force: true });
   });
   const codex = path.join(temporary, 'codex'), data = path.join(temporary, 'data');
@@ -214,7 +217,7 @@ $cases=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encoded}')
 $results=@()
 foreach($case in $cases){
   $script:whaleFakeTask=[pscustomobject]@{Actions=@([pscustomobject]@{Execute=$case.execute;Arguments=$case.args})}
-  try{& $block;$results+=[pscustomobject]@{name=$case.name;accepted=$true}}catch{$results+=[pscustomobject]@{name=$case.name;accepted=$false}}
+  try{. $block;$results+=[pscustomobject]@{name=$case.name;accepted=$true}}catch{$results+=[pscustomobject]@{name=$case.name;accepted=$false}}
 }
 $results|ConvertTo-Json -Compress
 `);
