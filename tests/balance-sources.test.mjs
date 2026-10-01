@@ -1,0 +1,56 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { ConfigStore } from '../runtime/config.mjs';
+import { WhaleService } from '../runtime/service.mjs';
+import { createDispatcher } from '../runtime/dispatcher.mjs';
+
+test('sources switch independently, preserve existing settings, isolate keys and persist selection', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'whale-sources-'));
+  t.after(()=>{assert.ok(path.basename(dir).startsWith('whale-sources-'));fs.rmSync(dir,{recursive:true});});
+  const codex=path.join(dir,'codex');fs.mkdirSync(codex);
+  fs.writeFileSync(path.join(codex,'config.toml'),'model_provider="test"\n[model_providers.test]\nbase_url="https://existing.example/v1"\nexperimental_bearer_token="ORIGINAL_TEST_KEY"');
+  const config=new ConfigStore({dataDir:dir,codexHome:codex,env:{}});
+  config.save({currency:'USD'});const original=fs.readFileSync(config.file,'utf8');
+  const service=new WhaleService({config,provider:{async balance(c){return {ok:true,totalBalance:19,currency:'USD',accountId:c.accountId};}}});
+  const key='sk-test_deepseek_0123456789';
+  const secretStorage={isEncryptionAvailable:()=>true,encryptString:()=>Buffer.from('encrypted-test-value'),decryptString:()=>key};
+  let requests=0;
+  const fetchImpl=async(url,options)=>{requests++;assert.equal(url,'https://api.deepseek.com/user/balance');assert.equal(options.headers.Authorization,'Bearer '+key);return Response.json({balance_infos:[{currency:'CNY',total_balance:'23.4567'}]});};
+  const make=()=>createDispatcher({dataDir:dir,service,fetchImpl,secretStorage,monitor:false,autoRefresh:false});
+  let server=make();t.after(()=>server.close());
+  const call=async(url,method='GET',body)=>JSON.parse((await server.dispatch(url,{method,body})).body);
+  assert.equal((await call('/dsh-whale/balance.json')).totalBalance,19);
+  assert.equal((await call('/api/deepseek-key','POST',{key})).ok,true);
+  const combined=await call('/api/combined-summary');
+  assert.equal(combined.deepseek.totalBalance,23.4567);
+  assert.equal(combined.subscription.available,false);
+  assert.equal((await call('/api/balance-sources')).active,'current');
+  assert.equal(fs.readFileSync(path.join(dir,'sources/deepseek/credential.json'),'utf8').includes(key),false);
+  await call('/api/balance-sources','POST',{active:'deepseek'});
+  const result=await call('/dsh-whale/balance.json');assert.equal(result.totalBalance,23.4567);assert.equal(result.currency,'CNY');
+  assert.equal(result.balanceSource,'deepseek');assert.equal(requests,1);
+  assert.equal((await call('/api/config','PUT',{baseUrl:'https://evil.example'})).ok,false);
+  assert.equal((await call('/api/deepseek-key')).ok,false);
+  assert.equal(JSON.stringify(await call('/api/balance-sources')).includes(key),false);
+  assert.equal(fs.readFileSync(config.file,'utf8'),original);
+  assert.equal(service.config.resolve().key,'ORIGINAL_TEST_KEY');
+  assert.equal((await call('/api/balance-sources','POST',{active:'unknown'})).ok,false);
+  await call('/api/balance-sources','POST',{active:'current'});
+  assert.equal((await call('/dsh-whale/balance.json')).totalBalance,19);
+  await call('/api/balance-sources','POST',{active:'deepseek'});
+  await server.close();server=make();
+  assert.equal((await call('/api/balance-sources')).active,'deepseek');
+  assert.equal((await call('/dsh-whale/balance.json')).totalBalance,23.4567);
+});
+
+test('unavailable secret encryption cannot save a credential',async t=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'whale-sources-'));
+  const service=new WhaleService({config:new ConfigStore({dataDir:dir,codexHome:dir,env:{}})});
+  const server=createDispatcher({dataDir:dir,service,monitor:false,autoRefresh:false});
+  t.after(async()=>{await server.close();assert.ok(path.basename(dir).startsWith('whale-sources-'));fs.rmSync(dir,{recursive:true});});
+  const response=await server.dispatch('/api/deepseek-key',{method:'POST',body:{key:'sk-test_deepseek_0123456789'}});
+  assert.equal(response.status,400);assert.equal(fs.existsSync(path.join(dir,'sources/deepseek/credential.json')),false);
+});

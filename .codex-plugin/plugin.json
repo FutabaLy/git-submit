@@ -1,0 +1,36 @@
+{
+  "name": "api-balance-whale",
+  "version": "0.3.0+codex.dual.20261001",
+  "description": "独立修改版：同时查看 DeepSeek 余额和 Codex 5h / 7 day 剩余额度",
+  "author": {
+    "name": "Yang-huai406 (upstream Codex adaptation)",
+    "url": "https://github.com/Yang-huai406"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "DeepSeek + Codex 小鲸鱼",
+    "shortDescription": "DeepSeek 余额与 Codex 订阅额度合并展示",
+    "longDescription": "独立修改版：点击角色同时查看 DeepSeek 账户余额、Codex 5h 与 7 day 剩余百分比；保留原有 API 来源，独立保存 DeepSeek 配置。",
+    "developerName": "Community fork",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "显示 API 余额小鲸鱼",
+      "查看当前 API 余额与今日用量",
+      "检查小鲸鱼自动跟随状态"
+    ],
+    "brandColor": "#146B70",
+    "composerIcon": "./assets/DSniang1.png",
+    "logo": "./assets/DSniang1.png"
+  },
+  "license": "MIT",
+  "keywords": [
+    "api",
+    "balance",
+    "whale",
+    "codex"
+  ],
+  "mcpServers": "./.mcp.json"
+}
